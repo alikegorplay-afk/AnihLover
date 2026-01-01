@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PYTHONUNBUFFERED=1
+    ulimits:
+      nofile: 65536

@@ -10,7 +10,7 @@ import aiohttp
 from bs4 import BeautifulSoup
 
 from src.manager.anihidew import Anihidew
-
+from src.core import config
 
 def sanitize_filename(filename):
     if os.name == 'nt':
@@ -26,7 +26,7 @@ def sanitize_filename(filename):
 
 async def main():
     async with aiohttp.ClientSession(
-
+        **config.proxy
     ) as session:
         tasks = []
         api = Anihidew(session)
@@ -51,6 +51,7 @@ async def main():
                     tasks.append(api.download_hentai(url[-1], directory / (m3u8.title + ".mp4")))
                     
             await asyncio.gather(*tasks)
+            tasks.clear()
         
         
 if __name__ == "__main__":

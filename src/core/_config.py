@@ -1,8 +1,29 @@
 import os
+import aiohttp
 from dataclasses import dataclass
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 @dataclass
-class Config:
+class ProxyConfig:
+    _proxy = os.getenv("PROXY", None) # Писать в виде http://ip:port
+    _proxy_auth = os.getenv("PROXY_AUTH", None) # Писать в виде логин:пароль
+
+    @property
+    def proxy(self):
+        return {
+            "proxy": self._proxy,
+            'proxy_auth': aiohttp.BasicAuth(self._proxy_auth.split(':')[0], self._proxy_auth.split(':')[1])
+        }
+        
+
+@dataclass
+class Config(
+    ProxyConfig
+):
     BD_URL: str = os.getenv("DB_URL", "sqlite+aiosqlite:///database.db")
     """Путь к базе данных"""
     

@@ -1,20 +1,25 @@
-FROM python:3.14.2-bookworm
+FROM python:3.12-bookworm
 
 WORKDIR /app
 
-COPY requirements.txt .
-
-# Установка FFmpeg через apt
+# Сначала устанавливаем системные зависимости
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ffmpeg && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN pip install -r requirements.txt
+# Копируем и устанавливаем Python зависимости
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-RUN mkdir data
-VOLUME [ "/app/data" ]
+# Создаем директорию для данных
+RUN mkdir -p /app/data
 
+# Копируем остальной код
 COPY . .
 
+# Указываем volume
+VOLUME [ "/app/data" ]
+
+# Команда запуска
 CMD ["python", "main.py"]

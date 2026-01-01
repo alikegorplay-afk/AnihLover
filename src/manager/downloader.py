@@ -28,11 +28,11 @@ class DownloadManager:
             
         with TemporaryDirectory() as tmpdir:
             tmpdir = Path(tmpdir)
-            tasks = [asyncio.create_task(self._download_chunk(url, tmpdir)) for url in urls]
+            tasks = [asyncio.create_task(self._download_chunk(url, tmpdir, indx)) for indx, url in enumerate(urls, 1)]
             await asyncio.gather(*tasks)
             
             async with aiofiles.open(tmpdir / "input.txt", 'w') as file:
-                for ts in tmpdir.glob("*.ts"):
+                for ts in sorted(tmpdir.glob("*.ts"), key = lambda x: int(x.name.split('.')[0])):
                     await file.write(f"file '{str(ts)}'" + "\n")
             
             loop = asyncio.get_event_loop()
@@ -40,11 +40,10 @@ class DownloadManager:
                 self.executer,
                 func = lambda: self._buidl_video(tmpdir, path)
             )
-            
-            
-    async def _download_chunk(self, url: str, path: Path | str):
+                        
+    async def _download_chunk(self, url: str, path: Path | str, index: int):
         path = Path(path)
-        async with aiofiles.open(path / url.split('/')[-1], 'wb') as file:
+        async with aiofiles.open(path / (str(index) + ".ts"), 'wb') as file:
             response = await self.http.request(url, 'bytes', self.http._m3u8_headers())
             if response is None:
                 logger.warning(f"Не удалось получит фрагмент (url={url})")
