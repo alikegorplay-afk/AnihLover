@@ -16,7 +16,7 @@ class ProxyConfig:
     def proxy(self):
         return {
             "proxy": self._proxy,
-            'proxy_auth': aiohttp.BasicAuth(self._proxy_auth.split(':')[0], self._proxy_auth.split(':')[1])
+            'proxy_auth': aiohttp.BasicAuth(self._proxy_auth.split(':')[0], self._proxy_auth.split(':')[1]) if self._proxy_auth else None
         }
         
 
