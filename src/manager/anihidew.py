@@ -14,7 +14,7 @@ class Anihidew:
     
     def __init__(
         self, 
-        session: aiohttp.ClientSession, 
+        session: aiohttp.ClientSession | RequestEngine, 
         *, 
         max_try: int = 3, 
         max_concurents: int = 5,
@@ -26,7 +26,7 @@ class Anihidew:
         """Логика, API, нужен для получение информации об сайте
 
         Args:
-            session (aiohttp.ClientSession): Экземпляр aiohttp.ClientSession.
+            session (aiohttp.ClientSession | RequestEngine): Экземпляр aiohttp.ClientSession. Либо экземпляр RequestEngine.
             max_try (int, optional): Максимальное количество попыток. Базовое значение 3.
             max_concurents (int, optional): Максимальное количество запросов. Базовое значение 5.
             mirror (_type_, optional): Домен к сайту. Базовое значение "https://anihidew.org".
@@ -43,7 +43,10 @@ class Anihidew:
         self.max_try = max_try
         self.max_concurents = max_concurents
         
-        self.http = RequestEngine(self.session, self.max_try, self.max_concurents)
+        if isinstance(session, RequestEngine):
+            self.http = session
+        else:
+            self.http = RequestEngine(self.session, self.max_try, self.max_concurents)
         
         self.hentai_parser = HentaiParser(self.mirror, self.features)
         self.dubbing_parser = DubingParser(self.mirror, self.features)
@@ -104,11 +107,14 @@ class Anihidew:
         
         return response
     
-    async def download_hentai(self, url: str, path: str = "video.mp4") -> None:
+    async def download_by_m3u8(self, url: str, path: str = "video.mp4") -> None:
         """Скачать мангу используя M3U8
 
         Args:
             url (str): URL - к M3U8
             path (str, optional): Путь к файлу для скачивание. Базовое значение "video.mp4".
         """
-        await self.downloader.download(url, path)
+        await self.downloader.download_by_m3u8(url, path)
+        
+    async def download(self, url: str, path: str = "video.mp4", voiece: str = 'auto') -> None:
+        ...

@@ -26,6 +26,10 @@ class HentaiParser(BaseHentaiParser):
         
         raise self._raise_not_found('poster')
     
+    def _extract_rating(self, soup: BeautifulSoup) -> float | None:
+        if rating := soup.select_one('div.card__rating-ext-count.centered-content'):
+            return float(rating.get_text(strip=True))
+    
     def _extract_director(self, soup: BeautifulSoup):
         return self._extract_headers(soup).get('Режиссер', [None])[0]
         

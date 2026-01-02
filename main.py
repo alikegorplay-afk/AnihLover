@@ -2,14 +2,13 @@ import asyncio
 import re
 import os
 
-from urllib.parse import urljoin
-from pathlib import Path
+from pprint import pp
 
 import aiohttp
 
-from bs4 import BeautifulSoup
-
 from src.manager.anihidew import Anihidew
+from src.manager.requesteng import RequestEngine
+from src.manager.urlextractor import URLExtractor
 from src.core import config
 
 def sanitize_filename(filename):
@@ -25,33 +24,29 @@ def sanitize_filename(filename):
     return filename
 
 async def main():
-    async with aiohttp.ClientSession(
-        **config.proxy
-    ) as session:
-        tasks = []
-        api = Anihidew(session)
+    async with aiohttp.ClientSession(**config.proxy) as session:
+        engine = RequestEngine(session)
         
-        soup = BeautifulSoup(await api.http.request("https://anihidew.org/hentai_top100_rating.html", 'text'), 'html.parser')
+        url_api = URLExtractor(engine)
+        hentai_api = Anihidew(engine)
         
-        for url in soup.select("a.poster.d-flex"):
-        
-            data = await api.get_hentai(url.get('href'))
+        for hentai in await url_api.extract_top_rating():
+            print(hentai.title)
+            print(hentai.url)
+            print(hentai.poster)
+            print(hentai.rating)
+            full_hentai = await hentai_api.get_hentai(hentai.url.encoded_string())
+            if not full_hentai:
+                continue
             
-            for i in data.all_iframe:
-                iframe_data = await api.get_ifrmae(i.encoded_string())
-                for m3u8 in [m3u8 for m3u8 in iframe_data.all_m3u8]:
-                    m3u8_data = await api.get_m3u8(m3u8.url.encoded_string())
-                    
-                    
-                    url = [urljoin(m3u8.url.encoded_string(), x) for x in m3u8_data.split("\n") if x and not x.startswith("#")]
+            pp(full_hentai.model_dump())
+            print("#" * 50)
+        
 
-                    directory = Path("data") / Path(iframe_data.dub_name + "-" + sanitize_filename(data.title))
-                    directory.mkdir(parents=True, exist_ok=True)
-                    
-                    tasks.append(api.download_hentai(url[-1], directory / (m3u8.title + ".mp4")))
-                    
-            await asyncio.gather(*tasks)
-            tasks.clear()
+        
+
+            
+    
         
         
 if __name__ == "__main__":

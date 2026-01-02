@@ -36,6 +36,7 @@ class BaseHentaiParser(BaseParser):
         title = self._extract_title(soup)
         url = self._extract_url(soup)
         poster = self._extract_poster(soup)
+        rating = self._extract_rating(soup)
         
         direcor = self._extract_director(soup)
         premiere = self._extract_premiere(soup)
@@ -53,6 +54,7 @@ class BaseHentaiParser(BaseParser):
             title = title,
             url = url,
             poster = poster,
+            rating = rating,
             director = direcor,
             premiere = premiere,
             studio = studio,
@@ -75,6 +77,10 @@ class BaseHentaiParser(BaseParser):
     @abstractmethod
     def _extract_poster(self, soup: BeautifulSoup) -> str:
         """Извлечение постера"""
+    
+    @abstractmethod
+    def _extract_rating(self, soup: BeautifulSoup) -> float | None:
+        """Извлечение рейтинга"""
     
     @abstractmethod
     def _extract_director(self, soup: BeautifulSoup) -> str:

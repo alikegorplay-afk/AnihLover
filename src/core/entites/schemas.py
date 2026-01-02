@@ -1,11 +1,19 @@
 from typing import List, Dict
 from pydantic import BaseModel, HttpUrl
 
-class BaseHentaiModel(BaseModel):
-    """Базовая модель хентая"""
+class MiniHentaiModel(BaseModel):
+    """Минимальная модель хентая"""
     title: str
     url: HttpUrl
     poster: HttpUrl
+    rating: float | None = None
+
+    @property
+    def id(self) -> int:
+        return int(self.url.encoded_string().split('/')[-1].split('-')[0])
+
+class BaseHentaiModel(MiniHentaiModel):
+    """Базовая модель хентая"""
     
     director: str | None = None
     premiere: str | None = None
@@ -16,10 +24,6 @@ class BaseHentaiModel(BaseModel):
     subtitles: List[str] | None = None
     genres: List[str] | None = None
     description: str | None = None
-    
-    @property
-    def id(self) -> int:
-        return int(self.url.encoded_string().split('/')[-1].split('-')[0])
     
 class HentaiModel(BaseHentaiModel):
     all_m3u8: Dict[str, HttpUrl]
