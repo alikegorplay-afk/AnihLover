@@ -27,7 +27,7 @@ class ProxyConfig:
 class Config(
     ProxyConfig
 ):
-    BD_URL: str = os.getenv("DB_URL", "sqlite+aiosqlite:///database.db")
+    BD_URL: str = os.getenv("DB_URL", "sqlite+aiosqlite:///data/database.db")
     """Путь к базе данных"""
     
     features: str = 'html.parser'
