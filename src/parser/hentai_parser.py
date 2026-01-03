@@ -50,7 +50,10 @@ class HentaiParser(BaseHentaiParser):
         
     def _extract_genres(self, soup: BeautifulSoup):
         if genres := self._extract_headers(soup).get('Жанр'):
-            return genres[0].split(" / ")
+            if " / " in genres[0]:
+                return genres[0].split(" / ")
+            else:
+                return genres[0].split(", ")
         return []
     
     @lru_cache(1)

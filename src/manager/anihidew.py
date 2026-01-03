@@ -4,7 +4,7 @@ import aiohttp
 
 from loguru import logger
 
-from ..core.entites.schemas import PreviewHentaiModel, M3U8Response
+from ..core.entites.schemas import PreviewHentaiModel, M3U8Response, MiniHentaiModel
 from ..parser import DubingParser, HentaiParser
 from .requesteng import RequestEngine
 from .downloader import DownloadManager
@@ -52,7 +52,7 @@ class Anihidew:
         self.dubbing_parser = DubingParser(self.mirror, self.features)
         self.downloader = DownloadManager(self.http, max_workers)
         
-    async def get_hentai(self, url: str) -> PreviewHentaiModel | None:
+    async def get_hentai(self, url: str | MiniHentaiModel) -> PreviewHentaiModel | None:
         """Получить всю информацию об хентае
 
         Args:
@@ -67,6 +67,13 @@ class Anihidew:
             >>>     data = await api.get_hentai("https://anihidew.org/1597-guilty-hole.html")
             >>>     print(data)
         """
+        if isinstance(url, MiniHentaiModel):
+            url = url.url.encoded_string()
+        elif isinstance(url, str):
+            url = url
+        else:
+            raise TypeError(f"Неподдерживаемый тип данный {type(url).__name__}")
+        
         response = await self.http.request(url, 'text')
         if response is None:
             logger.warning(f"Не удалось получить хентай (url={url})")
