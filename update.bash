@@ -1,6 +1,14 @@
 #!/bin/bash
 
-set -e
+# Устанавливаем полное окружение
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export HOME=/root
+cd /root/AnihLover || exit 1
+
+# Лог файл для отладки
+LOG_FILE="/root/AnihLover/update.log"
+
+exec > >(tee -a "$LOG_FILE") 2>&1
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -15,44 +23,59 @@ error() {
     exit 1
 }
 
+# Проверка наличия команд
+check_commands() {
+    command -v docker >/dev/null 2>&1 || error "docker не найден"
+    command -v docker-compose >/dev/null 2>&1 || command -v docker compose >/dev/null 2>&1 || error "docker-compose не найден"
+}
+
 # Основной процесс
 main() {
     log "Начало обновления приложения"
     
+    # Проверяем команды
+    check_commands
+    
+    # Используем правильную команду docker-compose
+    if command -v docker-compose >/dev/null 2>&1; then
+        DC_CMD="docker-compose"
+    else
+        DC_CMD="docker compose"
+    fi
+
     # Git pull
     log "Выполняем git pull..."
     if ! git pull; then
         error "Не удалось получить обновления из Git"
     fi
-    
-    # Проверяем изменения в зависимостях
-    if git diff HEAD@{1} -- package.json docker-compose.yml | grep -q "^[+-]"; then
-        log "Обнаружены изменения в конфигурационных файлах"
-    fi
-    
+
+    # Сохраняем старые версии файлов для сравнения
+    OLD_PACKAGE=$(md5sum package.json 2>/dev/null || echo "")
+    OLD_DOCKER=$(md5sum docker-compose.yml 2>/dev/null || echo "")
+
     # Останавливаем
     log "Останавливаем старые контейнеры..."
-    docker-compose down
-    
+    $DC_CMD down
+
     # Собираем с очисткой кэша при необходимости
     log "Собираем образы..."
-    docker-compose build --pull --no-cache
-    
+    $DC_CMD build --pull
+
     # Запускаем
     log "Запускаем контейнеры..."
-    docker-compose up -d
-    
+    $DC_CMD up -d
+
     # Ждём запуска и проверяем здоровье
     log "Ожидаем запуска сервисов..."
     sleep 10
-    
+
     # Проверяем, что контейнеры запущены
-    if ! docker-compose ps | grep -q "Up"; then
+    if ! $DC_CMD ps | grep -q "Up"; then
         error "Контейнеры не запустились"
     fi
-    
+
     log "Приложение успешно обновлено и запущено!"
-    log "Используйте 'docker-compose logs -f' для просмотра логов"
+    log "Лог сохранен в: $LOG_FILE"
 }
 
 # Запуск
