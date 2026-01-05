@@ -12,7 +12,7 @@ from src.manager.urlextractor import URLExtractor
 from src.core import config
 
 logger.remove()
-logger.add(sys.stdout, format = "<red>ANILOVER</red> | <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{message}</level>")
+logger.add(sys.stdout, format = "<red>ANILOVER</red> | <green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{message}</level>", level="INFO")
 
 async def main(engine: RequestEngine, manager: DataBaseManager):
     
@@ -30,11 +30,11 @@ async def main(engine: RequestEngine, manager: DataBaseManager):
                 await manager.add(hentai)
 
 async def init():
+    manager = None
     async with aiohttp.ClientSession(
-        #**config.proxy
+        **config.proxy
     ) as session:
             
-        engine = None
         engine = RequestEngine(session)
         
         try:
@@ -48,7 +48,7 @@ async def init():
             raise
         
         finally:
-            if engine is not None:
+            if manager is not None:
                 await manager.dispose()
 
 if __name__ == "__main__":

@@ -30,7 +30,7 @@ class Director(Base):
     
     # Исправлено: должно быть "hentais" (множественное число) и ссылаться на ассоциативную таблицу
     hentais: Mapped[List["Hentai"]] = relationship(
-        "Hentai", 
+        "DirectorHentai", 
         back_populates="director"
     )
     
@@ -44,13 +44,12 @@ class Studio(Base):
     name: Mapped[str] = mapped_column(String(255))
     
     hentais: Mapped[List["Hentai"]] = relationship(
-        "Hentai", 
+        "StudioHentai", 
         back_populates="studio"
     )
     
     def __repr__(self):
         return f"Studio(id={self.id}, name='{self.name}')"
-        
 
 class Voiceover(Base):
     __tablename__ = "voiceover"
@@ -93,6 +92,26 @@ class Genres(Base):
     
     def __repr__(self):
         return f"Genres(id={self.id}, name='{self.name}')"
+
+class DirectorHentai(Base):
+    __tablename__ = "director_hentai"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    
+    hentai_id: Mapped[int] = mapped_column(ForeignKey("hentai.id"))
+    director_id: Mapped[int] = mapped_column(ForeignKey("director.id"))
+    
+    hentai: Mapped["Hentai"] = relationship("Hentai", back_populates="director_associations")
+    director: Mapped["Director"] = relationship("Director", back_populates="hentais", lazy="joined")
+    
+class StudioHentai(Base):
+    __tablename__ = "studio_hentai"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    
+    hentai_id: Mapped[int] = mapped_column(ForeignKey("hentai.id"))
+    studio_id: Mapped[int] = mapped_column(ForeignKey("studio.id"))
+    
+    hentai: Mapped["Hentai"] = relationship("Hentai", back_populates="studio_associations")
+    studio: Mapped["Studio"] = relationship("Studio", back_populates="hentais", lazy="joined")
 
 class VoiceoverHentai(Base):
     __tablename__ = "voiceover_hentai"
@@ -138,10 +157,17 @@ class Hentai(Base):
     status: Mapped[str] = mapped_column(String(255), nullable=True)
     description: Mapped[str] = mapped_column(Text(), nullable=True)
     all_iframe: Mapped[List[str]] = mapped_column(JSON())
-    
-    director_id: Mapped[int] = mapped_column(ForeignKey("director.id", ondelete="SET NULL"), nullable=True)
-    studio_id: Mapped[int] = mapped_column(ForeignKey("studio.id", ondelete="SET NULL"), nullable=True)
 
+    director_associations: Mapped[List["DirectorHentai"]] = relationship(
+        "DirectorHentai",
+        back_populates="hentai",
+        lazy="joined"
+    )
+    studio_associations: Mapped[List["StudioHentai"]] = relationship(
+        "StudioHentai",
+        back_populates="hentai",
+        lazy="joined"
+    )
     voiceover_associations: Mapped[List["VoiceoverHentai"]] = relationship(
         "VoiceoverHentai", 
         back_populates="hentai",
@@ -158,20 +184,13 @@ class Hentai(Base):
         lazy="joined"
     )
     
-    # Свойства для удобного доступа к связанным объектам
-    director: Mapped[Optional["Director"]] = relationship(
-        "Director", 
-        back_populates="hentais",
-        foreign_keys=[director_id],
-        lazy="joined"
-    )
+    @property
+    def directors(self) -> List[Director]:
+        return [assoc.director for assoc in self.director_associations]
     
-    studio: Mapped[Optional["Studio"]] = relationship(
-        "Studio", 
-        back_populates="hentais",
-        foreign_keys=[studio_id],
-        lazy="joined"
-    )
+    @property
+    def studios(self) -> List[Studio]:
+        return [assoc.studio for assoc in self.studio_associations]
     
     @property
     def voiceovers(self) -> List[Voiceover]:

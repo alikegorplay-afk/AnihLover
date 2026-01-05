@@ -10,6 +10,8 @@ from ...core.entites.models import (
     Subtitles,
     Genres,
     
+    DirectorHentai,
+    StudioHentai,
     VoiceoverHentai,
     SubtitlesHentai,
     GenresHentai
@@ -37,9 +39,7 @@ class AddLogic(BaseDataBaseManager):
                     premier = model.premiere,
                     status = model.status,
                     description = model.description,
-                    all_iframe = [x.encoded_string() for x in model.all_iframe],
-                    director_id = ids['director'].id if ids['director'] else None,
-                    studio_id = ids['studio'].id if ids['studio'] else None
+                    all_iframe = [x.encoded_string() for x in model.all_iframe]
                 )
                 
                 session.add(hentai)
@@ -54,6 +54,26 @@ class AddLogic(BaseDataBaseManager):
                 await session.rollback()
                 
     async def _connect_hentai(self, session: AsyncSession, model: Hentai, ids: HentaiDict):
+        if (directors := ids['director']):
+            director_connector = []
+            for director in directors:
+                director = DirectorHentai(
+                    hentai_id = model.id,
+                    director_id = director.id
+                )
+                director_connector.append(director)
+            session.add_all(director_connector)
+            
+        if (studios := ids['studio']):
+            studio_connector = []
+            for studio in studios:
+                std = StudioHentai(
+                    hentai_id = model.id,
+                    studio_id = studio.id
+                )
+                studio_connector.append(std)
+            session.add_all(studio_connector)
+            
         if (voiceover := ids['voiceover']):
             voice_connector = []
             for voice in voiceover:
@@ -93,39 +113,49 @@ class AddLogic(BaseDataBaseManager):
             genres = await self._add_genres(session, model)
         )
     
-    async def _add_director(self, session: AsyncSession, model: PreviewHentaiModel) -> Director | None:
+    async def _add_director(self, session: AsyncSession, model: PreviewHentaiModel) -> list[Director]:
+        result = []
         if model.director is None:
-            return None
+            return result
         
-        director = await session.scalar(select(Director).where(Director.name == model.director))
-        if director is not None:
-            return director
-    
-        director = Director(
-            name = model.director
-        )
+        for director_name in model.director:
+            director = await session.scalar(select(Director).where(Director.name == director_name))
+            if director is not None:
+                result.append(director)
+                continue
         
-        session.add(director)
-        await session.flush()
+            director = Director(
+                name = director_name
+            )
+            
+            session.add(director)
+            await session.flush()
+            
+            result.append(director)
+            
+        return result
         
-        return director
-        
-    async def _add_studio(self, session: AsyncSession, model: PreviewHentaiModel) -> Studio | None:
+    async def _add_studio(self, session: AsyncSession, model: PreviewHentaiModel) -> list[Studio]:
+        result = []
         if model.studio is None:
-            return None
+            return result
         
-        studio = await session.scalar(select(Studio).where(Studio.name == model.studio))
-        if studio is not None:
-            return studio
-    
-        studio = Studio(
-            name = model.studio
-        )
+        for studio_name in model.studio:
+            studio = await session.scalar(select(Studio).where(Studio.name == studio_name))
+            if studio is not None:
+                result.append(studio)
+                continue
         
-        session.add(studio)
-        await session.flush()
-        
-        return studio
+            studio = Studio(
+                name = studio_name
+            )
+            
+            session.add(studio)
+            await session.flush()
+            
+            result.append(studio)
+            
+        return result
     
     async def _add_voiceover(self, session: AsyncSession, model: PreviewHentaiModel) -> list[Voiceover]:
         result = []

@@ -12,12 +12,21 @@ class MiniHentaiModel(BaseModel):
     def id(self) -> int:
         return int(self.url.encoded_string().split('/')[-1].split('-')[0])
 
+class FindHentaiModel(MiniHentaiModel):
+    premiere: str | None = None
+    status: str | None = None
+    
+    voiceover: List[str] | None = None
+    subtitles: List[str] | None = None
+    genres: List[str] | None = None
+    description: str | None = None
+
 class BaseHentaiModel(MiniHentaiModel):
     """Базовая модель хентая"""
     
-    director: str | None = None
+    director: list[str] | None = None
     premiere: str | None = None
-    studio: str | None = None
+    studio: list[str] | None = None
     status: str | None = None
     
     voiceover: List[str] | None = None

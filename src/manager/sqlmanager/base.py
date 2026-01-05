@@ -14,8 +14,8 @@ from ...core.entites.models import (
 )
 
 class HentaiDict(TypedDict):
-    director: Director | None
-    studio: Studio | None
+    director: list[Director]
+    studio: list[Studio]
     voiceover: list[Voiceover]
     subtitles: list[Subtitles]
     genres: list[Genres]

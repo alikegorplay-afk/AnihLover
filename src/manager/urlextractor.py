@@ -5,8 +5,8 @@ from bs4 import BeautifulSoup
 from loguru import logger
 
 from .requesteng import RequestEngine
-from ..core.entites.schemas import MiniHentaiModel, BaseHentaiModel
-from ..parser.hentai_parser import HentaiParser
+from ..core.entites.schemas import MiniHentaiModel, FindHentaiModel
+from ..parser.page_parser import PageParser
 
 class URLExtractor:
     TOP_URL: Literal["hentai_top.html"] = "hentai_top.html"
@@ -18,7 +18,7 @@ class URLExtractor:
         self.features = features
         self.mirror = mirror
         
-        self.hentai_parser = HentaiParser(mirror, features)
+        self.page_parser = PageParser(mirror, features)
         
     async def extract_top(self):
         url = self._urljoin(self.TOP_URL)
@@ -58,13 +58,8 @@ class URLExtractor:
     def _urljoin(self, url: str) -> str:
         return urljoin(self.mirror, url)
     
-    def _extract_page(self, soup: BeautifulSoup) -> list[str]:
-        result = []
-        for card in soup.select('div#dle-content article.card'):
-            url = card.select_one('a').get('href')
-            result.append(url)
-                    
-        return result
+    def _extract_page(self, soup: BeautifulSoup) -> list[FindHentaiModel]:
+        return self.page_parser.extract(soup)
     
     def _extract_rating_page(self, soup: BeautifulSoup) -> list[MiniHentaiModel]:
         result: list[MiniHentaiModel] = []

@@ -31,22 +31,26 @@ class HentaiParser(BaseHentaiParser):
             return float(rating.get_text(strip=True))
     
     def _extract_director(self, soup: BeautifulSoup):
-        return self._extract_headers(soup).get('Режиссер', [None])[0]
+        if directors := self._extract_headers(soup).get('Режиссер'):
+            return self._correct_headers(directors)
+        return []
         
     def _extract_premiere(self, soup: BeautifulSoup):
         return self._extract_headers(soup).get('Премьера', [None])[0]
 
     def _extract_studio(self, soup: BeautifulSoup):
-        return self._extract_headers(soup).get('Студия', [None])[0]
+        if studios := self._extract_headers(soup).get('Студия'):
+            return self._correct_headers(studios)
+        return []
 
     def _extract_status(self, soup: BeautifulSoup):
         return self._extract_headers(soup).get('Статус', [None])[0]
         
     def _extract_voiceover(self, soup: BeautifulSoup):
-        return self._extract_headers(soup).get('Озвучка', [])
+        return self._correct_headers(self._extract_headers(soup).get('Озвучка', []))
         
     def _extract_subtitles(self, soup: BeautifulSoup):
-        return self._extract_headers(soup).get('Субтитры', [])
+        return self._correct_headers(self._extract_headers(soup).get('Субтитры', []))
         
     def _extract_genres(self, soup: BeautifulSoup):
         if genres := self._extract_headers(soup).get('Жанр'):
@@ -64,6 +68,7 @@ class HentaiParser(BaseHentaiParser):
                 title, value = li.get_text(strip=True).split(":", 1)
             except ValueError:
                 continue
+            
             result[title].append(value.strip())
             
         return result

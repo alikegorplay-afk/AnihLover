@@ -27,6 +27,17 @@ class BaseParser(ABC):
     def _raise_not_found(self, message: str) -> None:
         raise RequiredAttributeNotFound(f'Обязательный атрибут "{message}" не обнаружен')
     
+    def _correct_headers(self, items: list[str]) -> list[str]:
+        result = []
+        for item in items:
+            item = item.replace(", ", " & ")
+            if " & " in item:
+                result.extend(x.strip() for x in item.split(" & "))
+            else:
+                result.append(item.strip())
+        
+        return result
+    
 class BaseHentaiParser(BaseParser):
     """Базовый класс для парсинга хентая"""
     
@@ -38,7 +49,7 @@ class BaseHentaiParser(BaseParser):
         poster = self._extract_poster(soup)
         rating = self._extract_rating(soup)
         
-        direcor = self._extract_director(soup)
+        director = self._extract_director(soup)
         premiere = self._extract_premiere(soup)
         studio = self._extract_studio(soup)
         status = self._extract_status(soup)
@@ -55,7 +66,7 @@ class BaseHentaiParser(BaseParser):
             url = url,
             poster = poster,
             rating = rating,
-            director = direcor,
+            director = director,
             premiere = premiere,
             studio = studio,
             status = status,
@@ -83,7 +94,7 @@ class BaseHentaiParser(BaseParser):
         """Извлечение рейтинга"""
     
     @abstractmethod
-    def _extract_director(self, soup: BeautifulSoup) -> str:
+    def _extract_director(self, soup: BeautifulSoup) -> list[str]:
         """Извлечение режиссера"""
         
     @abstractmethod
@@ -91,7 +102,7 @@ class BaseHentaiParser(BaseParser):
         """Извлечение премьеры"""
 
     @abstractmethod
-    def _extract_studio(self, soup: BeautifulSoup) -> str:
+    def _extract_studio(self, soup: BeautifulSoup) -> list[str]:
         """Извлечение студии"""
 
     @abstractmethod
