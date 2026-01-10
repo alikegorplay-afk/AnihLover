@@ -9,7 +9,14 @@ docker-compose up -d --build
 ```
 
 2. Через python
-```bash
-pip install -r requirements.txt
-python3 main.py
-```
+
+    2.1. Установить зависимости
+    ```bash
+    pip install -r requirements.txt
+    ```
+    2.2 Установить ffmpeg
+    
+    2.3 Запустить
+    ```bash
+    python main.py
+    ```
